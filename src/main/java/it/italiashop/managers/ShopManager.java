@@ -46,7 +46,7 @@ public class ShopManager {
         add(Material.SNOW_BLOCK, "Neve", ShopItem.Category.BLOCCHI, 400000, 160000, 80000, 800000, false, 0, 64);
         add(Material.CLAY, "Argilla", ShopItem.Category.BLOCCHI, 600000, 240000, 150000, 1500000, false, 0, 64);
         add(Material.TERRACOTTA, "Terracotta", ShopItem.Category.BLOCCHI, 700000, 280000, 150000, 1500000, false, 0, 64);
-        add(Material.WOOL, "Lana", ShopItem.Category.BLOCCHI, 500000, 200000, 100000, 1000000, false, 0, 64);
+        add(Material.WHITE_WOOL, "Lana", ShopItem.Category.BLOCCHI, 500000, 200000, 100000, 1000000, false, 0, 64);
 
         // === MINERALI ===
         add(Material.COAL, "Carbone", ShopItem.Category.MINERALI, 1000000, 400000, 200000, 3000000, false, 0, 64);
