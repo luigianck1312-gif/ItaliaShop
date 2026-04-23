@@ -61,18 +61,51 @@ public class ShopListener implements Listener {
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent e) {
         Player player = e.getPlayer();
-        // Non aggiornare se ha una GUI aperta
         if (ShopGUI.openGUI.containsKey(player.getUniqueId())) return;
         if (PvPGUI.openGUI.containsKey(player.getUniqueId())) return;
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             ItemStack item = player.getInventory().getItem(e.getNewSlot());
             if (item == null || item.getType().isAir()) return;
-            // Solo aggiorna se ha un valore
             double buy = ItemValueRegistry.getBuyPrice(item.getType());
             double sell = ItemValueRegistry.getSellPrice(item.getType());
             if (buy <= 0 && sell <= 0) return;
             updateItemLore(player, item, e.getNewSlot());
+        }, 1L);
+    }
+
+    // Aggiorna lore quando si prende un oggetto dall'inventario
+    @EventHandler
+    public void onInventoryPickup(org.bukkit.event.player.PlayerPickupItemEvent e) {
+        Player player = e.getPlayer();
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            for (int i = 0; i < player.getInventory().getSize(); i++) {
+                ItemStack item = player.getInventory().getItem(i);
+                if (item == null || item.getType().isAir()) continue;
+                double buy = ItemValueRegistry.getBuyPrice(item.getType());
+                double sell = ItemValueRegistry.getSellPrice(item.getType());
+                if (buy <= 0 && sell <= 0) continue;
+                updateItemLore(player, item, i);
+            }
+        }, 2L);
+    }
+
+    // Aggiorna lore quando si apre l'inventario
+    @EventHandler
+    public void onInventoryOpen(org.bukkit.event.inventory.InventoryOpenEvent e) {
+        if (!(e.getPlayer() instanceof Player player)) return;
+        if (ShopGUI.openGUI.containsKey(player.getUniqueId())) return;
+        if (PvPGUI.openGUI.containsKey(player.getUniqueId())) return;
+
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            for (int i = 0; i < player.getInventory().getSize(); i++) {
+                ItemStack item = player.getInventory().getItem(i);
+                if (item == null || item.getType().isAir()) continue;
+                double buy = ItemValueRegistry.getBuyPrice(item.getType());
+                double sell = ItemValueRegistry.getSellPrice(item.getType());
+                if (buy <= 0 && sell <= 0) continue;
+                updateItemLore(player, item, i);
+            }
         }, 1L);
     }
 
