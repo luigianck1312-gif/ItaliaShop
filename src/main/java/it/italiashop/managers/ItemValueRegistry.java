@@ -7,9 +7,11 @@ import java.util.Map;
 
 public class ItemValueRegistry {
 
-    // D = prezzo ACQUISTO diamante. Vendita diamante = D*0.6 = 1,250,000
-    // D = 1,250,000 / 0.6 = 2,083,333
+    // Terra acquisto = 6,510 → Terra vendita x64 = ~250,000
+    // Diamante acquisto = 2,083,333 → Diamante vendita = 1,250,000
+    // Elitra acquisto = 1,000,000,000
     private static final double D = 2_083_333;
+    private static final double DIRT_BUY = 6_510;
 
     private static final Map<Material, double[]> VALUES = new HashMap<>();
 
@@ -18,36 +20,36 @@ public class ItemValueRegistry {
         // buyPrice=-1 = solo vendita
 
         // TERRA E ROCCIA
-        v(Material.DIRT, D*0.002);
-        v(Material.GRASS_BLOCK, D*0.0025);
-        v(Material.COARSE_DIRT, D*0.002);
-        v(Material.PODZOL, D*0.003);
-        v(Material.ROOTED_DIRT, D*0.0025);
-        v(Material.MUD, D*0.002);
-        v(Material.PACKED_MUD, D*0.004);
-        v(Material.MUD_BRICKS, D*0.005);
-        v(Material.MUD_BRICK_STAIRS, D*0.003);
-        v(Material.MUD_BRICK_SLAB, D*0.0015);
-        v(Material.MUD_BRICK_WALL, D*0.0025);
-        v(Material.SAND, D*0.003);
-        v(Material.RED_SAND, D*0.0032);
-        v(Material.GRAVEL, D*0.0035);
-        v(Material.CLAY, D*0.006);
-        v(Material.CLAY_BALL, D*0.0015);
-        v(Material.ICE, D*0.005);
-        v(Material.PACKED_ICE, D*0.01);
-        v(Material.BLUE_ICE, D*0.02);
-        v(Material.SNOW_BLOCK, D*0.004);
-        v(Material.SNOW, D*0.001);
-        v(Material.OBSIDIAN, D*0.05);
-        v(Material.CRYING_OBSIDIAN, D*0.065);
-        v(Material.COBWEB, D*0.008);
-        v(Material.SPONGE, D*0.5);
-        v(Material.WET_SPONGE, -1, D*0.3);
-        v(Material.DRIPSTONE_BLOCK, D*0.003);
-        v(Material.POINTED_DRIPSTONE, D*0.002);
-        v(Material.MYCELIUM, D*0.004);
-        v(Material.DIRT_PATH, D*0.002);
+        v(Material.DIRT, DIRT_BUY);
+        v(Material.GRASS_BLOCK, DIRT_BUY*1.25);
+        v(Material.COARSE_DIRT, DIRT_BUY);
+        v(Material.PODZOL, DIRT_BUY*1.5);
+        v(Material.ROOTED_DIRT, DIRT_BUY*1.25);
+        v(Material.MUD, DIRT_BUY);
+        v(Material.PACKED_MUD, DIRT_BUY*2);
+        v(Material.MUD_BRICKS, DIRT_BUY*2.5);
+        v(Material.MUD_BRICK_STAIRS, DIRT_BUY*1.5);
+        v(Material.MUD_BRICK_SLAB, DIRT_BUY*0.75);
+        v(Material.MUD_BRICK_WALL, DIRT_BUY*1.25);
+        v(Material.SAND, DIRT_BUY*1.5);
+        v(Material.RED_SAND, DIRT_BUY*1.6);
+        v(Material.GRAVEL, DIRT_BUY*1.75);
+        v(Material.CLAY, DIRT_BUY*3);
+        v(Material.CLAY_BALL, DIRT_BUY*0.75);
+        v(Material.ICE, DIRT_BUY*2.5);
+        v(Material.PACKED_ICE, DIRT_BUY*5);
+        v(Material.BLUE_ICE, DIRT_BUY*10);
+        v(Material.SNOW_BLOCK, DIRT_BUY*2);
+        v(Material.SNOW, DIRT_BUY*0.5);
+        v(Material.OBSIDIAN, DIRT_BUY*25);
+        v(Material.CRYING_OBSIDIAN, DIRT_BUY*32.5);
+        v(Material.COBWEB, DIRT_BUY*4);
+        v(Material.SPONGE, DIRT_BUY*250);
+        v(Material.WET_SPONGE, -1, DIRT_BUY*150);
+        v(Material.DRIPSTONE_BLOCK, DIRT_BUY*1.5);
+        v(Material.POINTED_DRIPSTONE, DIRT_BUY);
+        v(Material.MYCELIUM, DIRT_BUY*2);
+        v(Material.DIRT_PATH, DIRT_BUY);
 
         // PIETRA
         v(Material.STONE, D*0.004);
