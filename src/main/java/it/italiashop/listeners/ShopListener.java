@@ -232,8 +232,7 @@ public class ShopListener implements Listener {
         };
         if (amount == 0) return;
 
-        double cost = item.getCurrentPrice() / 64.0 * amount;
-        if (item.getMaxStack() == 1) cost = item.getCurrentPrice();
+        double cost = item.getCurrentPrice() * amount;
 
         if (!plugin.getEconomy().has(player, cost)) { player.sendMessage(ChatColor.RED + "Non hai abbastanza soldi!"); return; }
         if (player.getInventory().firstEmpty() == -1) { player.sendMessage(ChatColor.RED + "Inventario pieno!"); return; }

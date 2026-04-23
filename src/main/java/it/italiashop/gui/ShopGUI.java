@@ -124,16 +124,16 @@ public class ShopGUI {
             } else {
                 inv.setItem(9, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x1",
-                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() / 64))));
+                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice()))));
                 inv.setItem(11, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x16",
-                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() / 4))));
+                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() * 16))));
                 inv.setItem(13, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x32",
-                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() / 2))));
+                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() * 32))));
                 inv.setItem(15, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x64",
-                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice()))));
+                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() * 64))));
             }
         }
 
@@ -233,8 +233,8 @@ public class ShopGUI {
     private ItemStack createBuyItemDisplay(Player player, ShopItem item) {
         boolean hasCooldown = item.isRare() && plugin.getShopManager().hasCooldown(player.getUniqueId(), item.getMaterial());
         List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.GRAY + "Acquisto x1: " + ChatColor.GREEN + "$" + formatPrice(item.getCurrentPrice() / (item.getMaxStack() == 1 ? 1 : 64)));
-        lore.add(ChatColor.GRAY + "Vendita x1: " + ChatColor.RED + "$" + formatPrice(item.getCurrentSellPrice() / (item.getMaxStack() == 1 ? 1 : 64)));
+        lore.add(ChatColor.GRAY + "Acquisto x1: " + ChatColor.GREEN + "$" + formatPrice(item.getCurrentPrice()));
+        lore.add(ChatColor.GRAY + "Vendita x1: " + ChatColor.RED + "$" + formatPrice(item.getCurrentSellPrice()));
         if (item.isRare()) lore.add(ChatColor.GOLD + "Oggetto Raro - Cooldown: " + item.getCooldownDays() + "g");
         if (hasCooldown) lore.add(ChatColor.RED + "In cooldown!");
         lore.add(ChatColor.YELLOW + "Clicca per comprare");
