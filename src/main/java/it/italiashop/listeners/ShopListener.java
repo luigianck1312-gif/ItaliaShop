@@ -239,7 +239,20 @@ public class ShopListener implements Listener {
         if (player.getInventory().firstEmpty() == -1) { player.sendMessage(ChatColor.RED + "Inventario pieno!"); return; }
 
         plugin.getEconomy().withdrawPlayer(player, cost);
-        player.getInventory().addItem(new ItemStack(item.getMaterial(), amount));
+
+        // Crea item con lore prezzi
+        ItemStack newItem = new ItemStack(item.getMaterial(), amount);
+        ItemMeta meta = newItem.getItemMeta();
+        if (meta != null) {
+            List<String> lore = new ArrayList<>();
+            double buyPrice = ItemValueRegistry.getBuyPrice(item.getMaterial());
+            double sellPrice = ItemValueRegistry.getSellPrice(item.getMaterial());
+            if (buyPrice > 0) lore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
+            if (sellPrice > 0) lore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
+            meta.setLore(lore);
+            newItem.setItemMeta(meta);
+        }
+        player.getInventory().addItem(newItem);
         item.onBuy(amount);
         if (item.isRare()) plugin.getShopManager().setCooldown(uuid, item.getMaterial());
         player.sendMessage(ChatColor.GREEN + "Comprato x" + amount + " " + item.getDisplayName() + " per $" + ShopGUI.formatPrice(cost));
