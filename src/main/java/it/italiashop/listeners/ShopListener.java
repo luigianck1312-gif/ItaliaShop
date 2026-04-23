@@ -61,35 +61,45 @@ public class ShopListener implements Listener {
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent e) {
         Player player = e.getPlayer();
-        // Aggiorna lore con delay per essere sicuri
+        // Non aggiornare se ha una GUI aperta
+        if (ShopGUI.openGUI.containsKey(player.getUniqueId())) return;
+        if (PvPGUI.openGUI.containsKey(player.getUniqueId())) return;
+
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             ItemStack item = player.getInventory().getItem(e.getNewSlot());
             if (item == null || item.getType().isAir()) return;
-            updateItemLore(item);
-            player.getInventory().setItem(e.getNewSlot(), item);
+            // Solo aggiorna se ha un valore
+            double buy = ItemValueRegistry.getBuyPrice(item.getType());
+            double sell = ItemValueRegistry.getSellPrice(item.getType());
+            if (buy <= 0 && sell <= 0) return;
+            updateItemLore(player, item, e.getNewSlot());
         }, 1L);
     }
 
-    private void updateItemLore(ItemStack item) {
+    private void updateItemLore(Player player, ItemStack item, int slot) {
         Material mat = item.getType();
         double buyPrice = ItemValueRegistry.getBuyPrice(mat);
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
         if (sellPrice <= 0 && buyPrice <= 0) return;
 
+        // Non modificare items con enchant o NBT speciali
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) meta = org.bukkit.Bukkit.getItemFactory().getItemMeta(mat);
         if (meta == null) return;
 
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
 
         // Rimuovi vecchi valori se presenti
-        lore.removeIf(line -> ChatColor.stripColor(line).startsWith("Acquisto:") || ChatColor.stripColor(line).startsWith("Vendita:"));
+        lore.removeIf(line -> {
+            String stripped = ChatColor.stripColor(line);
+            return stripped.startsWith("Acquisto:") || stripped.startsWith("Vendita:");
+        });
 
         if (buyPrice > 0) lore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
         if (sellPrice > 0) lore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
 
         meta.setLore(lore);
         item.setItemMeta(meta);
+        player.getInventory().setItem(slot, item);
     }
 
     // Morte in arena
@@ -112,7 +122,15 @@ public class ShopListener implements Listener {
 
         String shopGui = ShopGUI.openGUI.get(uuid);
         String pvpGui = PvPGUI.openGUI.get(uuid);
+
+        // Cancella solo se siamo in una GUI del plugin
         if (shopGui == null && pvpGui == null) return;
+
+        // Controlla che sia l'inventario del plugin e non quello del player
+        String title = e.getView().getTitle();
+        if (!title.contains("Shop") && !title.contains("Compra") && !title.contains("Vendi") &&
+            !title.contains("Arena") && !title.contains("Inviti") && !title.contains("Scommessa") &&
+            !title.contains("avversario")) return;
 
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;

@@ -900,7 +900,9 @@ public class ItemValueRegistry {
     }
 
     private static void v(Material mat, double buy, double sell) {
-        VALUES.put(mat, new double[]{buy, sell});
+        // Prezzo vendita = 60% del prezzo acquisto se acquistabile, altrimenti usa sell diretto
+        double actualSell = buy > 0 ? buy * 0.6 : sell;
+        VALUES.put(mat, new double[]{buy, actualSell});
     }
 
     public static double getBuyPrice(Material mat) {

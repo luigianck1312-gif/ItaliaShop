@@ -42,6 +42,7 @@ public class ArenaManager {
                 arenaWorld.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
                 arenaWorld.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
                 arenaWorld.setTime(6000);
+                arenaWorld.setDifficulty(org.bukkit.Difficulty.HARD);
                 buildArena();
             }
         }
@@ -53,6 +54,10 @@ public class ArenaManager {
     }
 
     private void giveArenaGear(Player player) {
+        // Rimuovi tutti gli effetti
+        player.getActivePotionEffects().forEach(e -> player.removePotionEffect(e.getType()));
+        // Imposta gamemode survival per danno normale
+        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
         player.getInventory().setHelmet(new ItemStack(Material.DIAMOND_HELMET));
         player.getInventory().setChestplate(new ItemStack(Material.DIAMOND_CHESTPLATE));
         player.getInventory().setLeggings(new ItemStack(Material.DIAMOND_LEGGINGS));
@@ -60,6 +65,7 @@ public class ArenaManager {
         player.getInventory().setItemInMainHand(new ItemStack(Material.DIAMOND_SWORD));
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
+        player.setSaturation(20);
     }
 
     private void buildArena() {

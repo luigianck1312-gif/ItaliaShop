@@ -25,7 +25,10 @@ public class ShopManager {
     private void add(Material mat, String name, ShopItem.Category cat,
                      double buyPrice, double sellPrice, double minPrice, double maxPrice,
                      boolean rare, int cooldown, int maxStack) {
-        items.add(new ShopItem(mat, name, cat, buyPrice, sellPrice, minPrice, maxPrice, rare, cooldown, maxStack, true));
+        // Prezzo vendita sempre al 60% del prezzo acquisto
+        double actualSellPrice = buyPrice * 0.6;
+        double actualMinPrice = minPrice;
+        items.add(new ShopItem(mat, name, cat, buyPrice, actualSellPrice, actualMinPrice, maxPrice, rare, cooldown, maxStack, true));
     }
 
     private void addSellOnly(Material mat, String name, ShopItem.Category cat, double sellPrice) {
@@ -404,6 +407,87 @@ public class ShopManager {
         add(Material.END_ROD, "Bastone End", ShopItem.Category.END, 1280000, 512000, 256000, 3200000, false, 0, 64);
         add(Material.END_CRYSTAL, "Cristallo End", ShopItem.Category.END, 32000000, 12800000, 6400000, 80000000, false, 0, 64);
         add(Material.ECHO_SHARD, "Frammento Eco", ShopItem.Category.END, 32000000, 12800000, 6400000, 80000000, false, 0, 64);
+
+        // CONTENITORI
+        add(Material.CHEST, "Forziere", ShopItem.Category.DECORAZIONI, 960000, 384000, 192000, 2400000, false, 0, 64);
+        add(Material.TRAPPED_CHEST, "Forziere a Trappola", ShopItem.Category.DECORAZIONI, 1152000, 460800, 230400, 2880000, false, 0, 64);
+        add(Material.BARREL, "Botte", ShopItem.Category.DECORAZIONI, 960000, 384000, 192000, 2400000, false, 0, 64);
+        add(Material.ENDER_CHEST, "Forziere Ender", ShopItem.Category.END, 32000000, 12800000, 6400000, 80000000, false, 0, 64);
+
+        // REDSTONE E MECCANISMI
+        add(Material.REDSTONE_TORCH, "Torcia Redstone", ShopItem.Category.DECORAZIONI, 320000, 128000, 64000, 800000, false, 0, 64);
+        add(Material.REPEATER, "Ripetitore", ShopItem.Category.DECORAZIONI, 640000, 256000, 128000, 1600000, false, 0, 64);
+        add(Material.COMPARATOR, "Comparatore", ShopItem.Category.DECORAZIONI, 960000, 384000, 192000, 2400000, false, 0, 64);
+        add(Material.OBSERVER, "Osservatore", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 64);
+        add(Material.PISTON, "Pistone", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 64);
+        add(Material.STICKY_PISTON, "Pistone Appiccicoso", ShopItem.Category.DECORAZIONI, 1920000, 768000, 384000, 4800000, false, 0, 64);
+        add(Material.SLIME_BLOCK, "Blocco Muco", ShopItem.Category.DECORAZIONI, 2240000, 896000, 448000, 5600000, false, 0, 64);
+        add(Material.HONEY_BLOCK, "Blocco Miele", ShopItem.Category.DECORAZIONI, 2560000, 1024000, 512000, 6400000, false, 0, 64);
+        add(Material.DISPENSER, "Distributore", ShopItem.Category.DECORAZIONI, 960000, 384000, 192000, 2400000, false, 0, 64);
+        add(Material.DROPPER, "Espulsore", ShopItem.Category.DECORAZIONI, 640000, 256000, 128000, 1600000, false, 0, 64);
+        add(Material.HOPPER, "Tramoggia", ShopItem.Category.DECORAZIONI, 2560000, 1024000, 512000, 6400000, false, 0, 64);
+        add(Material.LEVER, "Leva", ShopItem.Category.DECORAZIONI, 192000, 76800, 38400, 480000, false, 0, 64);
+        add(Material.STONE_BUTTON, "Pulsante Pietra", ShopItem.Category.DECORAZIONI, 192000, 76800, 38400, 480000, false, 0, 64);
+        add(Material.TARGET, "Bersaglio", ShopItem.Category.DECORAZIONI, 640000, 256000, 128000, 1600000, false, 0, 64);
+        add(Material.DAYLIGHT_DETECTOR, "Rilevatore Luce", ShopItem.Category.DECORAZIONI, 960000, 384000, 192000, 2400000, false, 0, 64);
+        add(Material.TRIPWIRE_HOOK, "Gancio Filo", ShopItem.Category.DECORAZIONI, 320000, 128000, 64000, 800000, false, 0, 64);
+        add(Material.REDSTONE_LAMP, "Lampada Redstone", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 64);
+
+        // PORTE FERRO E BOTOLE
+        add(Material.IRON_DOOR, "Porta Ferro", ShopItem.Category.DECORAZIONI, 3200000, 1280000, 640000, 8000000, false, 0, 64);
+        add(Material.IRON_TRAPDOOR, "Botola Ferro", ShopItem.Category.DECORAZIONI, 3200000, 1280000, 640000, 8000000, false, 0, 64);
+
+        // OGGETTI UTILI
+        add(Material.BUCKET, "Secchio", ShopItem.Category.NATURA, 1920000, 768000, 384000, 4800000, false, 0, 16);
+        add(Material.WATER_BUCKET, "Secchio d'Acqua", ShopItem.Category.NATURA, 2240000, 896000, 448000, 5600000, false, 0, 16);
+        add(Material.LAVA_BUCKET, "Secchio di Lava", ShopItem.Category.NATURA, 3200000, 1280000, 640000, 8000000, false, 0, 16);
+        add(Material.MILK_BUCKET, "Secchio di Latte", ShopItem.Category.NATURA, 1280000, 512000, 256000, 3200000, false, 0, 16);
+        add(Material.COMPASS, "Bussola", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 64);
+        add(Material.CLOCK, "Orologio", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 64);
+        add(Material.NAME_TAG, "Targhetta", ShopItem.Category.DECORAZIONI, 3200000, 1280000, 640000, 8000000, false, 0, 64);
+        add(Material.LEAD, "Guinzaglio", ShopItem.Category.NATURA, 960000, 384000, 192000, 2400000, false, 0, 64);
+        add(Material.SADDLE, "Sella", ShopItem.Category.NATURA, 6400000, 2560000, 1280000, 16000000, false, 0, 1);
+        add(Material.ITEM_FRAME, "Cornice", ShopItem.Category.DECORAZIONI, 320000, 128000, 64000, 800000, false, 0, 64);
+        add(Material.GLOW_ITEM_FRAME, "Cornice Luminosa", ShopItem.Category.DECORAZIONI, 640000, 256000, 128000, 1600000, false, 0, 64);
+        add(Material.PAINTING, "Dipinto", ShopItem.Category.DECORAZIONI, 320000, 128000, 64000, 800000, false, 0, 64);
+        add(Material.ARMOR_STAND, "Espositore Armatura", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 64);
+        add(Material.SPYGLASS, "Cannocchiale", ShopItem.Category.DECORAZIONI, 3200000, 1280000, 640000, 8000000, false, 0, 64);
+        add(Material.RECOVERY_COMPASS, "Bussola Recupero", ShopItem.Category.RARI, 19200000, 7680000, 3840000, 48000000, false, 0, 1);
+        add(Material.PAPER, "Carta", ShopItem.Category.DECORAZIONI, 192000, 76800, 38400, 480000, false, 0, 64);
+        add(Material.BOOK, "Libro", ShopItem.Category.DECORAZIONI, 640000, 256000, 128000, 1600000, false, 0, 64);
+        add(Material.FIRE_CHARGE, "Palla di Fuoco", ShopItem.Category.NETHER, 640000, 256000, 128000, 1600000, false, 0, 64);
+        add(Material.FIREWORK_ROCKET, "Razzo", ShopItem.Category.DECORAZIONI, 320000, 128000, 64000, 800000, false, 0, 64);
+
+        // BARCHE
+        add(Material.OAK_BOAT, "Barca Quercia", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.SPRUCE_BOAT, "Barca Abete", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.BIRCH_BOAT, "Barca Betulla", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.JUNGLE_BOAT, "Barca Giungla", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.ACACIA_BOAT, "Barca Acacia", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.DARK_OAK_BOAT, "Barca Rovere", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.MANGROVE_BOAT, "Barca Mangrovia", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.CHERRY_BOAT, "Barca Ciliegio", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.BAMBOO_RAFT, "Zattera Bambu", ShopItem.Category.LEGNO, 1920000, 768000, 384000, 4800000, false, 0, 1);
+
+        // MINECART
+        add(Material.MINECART, "Vagoncino", ShopItem.Category.DECORAZIONI, 1920000, 768000, 384000, 4800000, false, 0, 1);
+        add(Material.CHEST_MINECART, "Vagoncino Forziere", ShopItem.Category.DECORAZIONI, 2560000, 1024000, 512000, 6400000, false, 0, 1);
+        add(Material.FURNACE_MINECART, "Vagoncino Fornace", ShopItem.Category.DECORAZIONI, 2240000, 896000, 448000, 5600000, false, 0, 1);
+        add(Material.HOPPER_MINECART, "Vagoncino Tramoggia", ShopItem.Category.DECORAZIONI, 3200000, 1280000, 640000, 8000000, false, 0, 1);
+
+        // BLOCCHI SPECIALI
+        add(Material.DRIPSTONE_BLOCK, "Blocco Stalattite", ShopItem.Category.PIETRA, 256000, 102400, 51200, 640000, false, 0, 64);
+        add(Material.POINTED_DRIPSTONE, "Stalattite", ShopItem.Category.PIETRA, 192000, 76800, 38400, 480000, false, 0, 64);
+        add(Material.MYCELIUM, "Micelio", ShopItem.Category.NATURA, 320000, 128000, 64000, 800000, false, 0, 64);
+        add(Material.DEAD_BUSH, "Cespuglio Secco", ShopItem.Category.NATURA, 96000, 38400, 19200, 240000, false, 0, 64);
+        add(Material.TALL_GRASS, "Erba Alta", ShopItem.Category.NATURA, 128000, 51200, 25600, 320000, false, 0, 64);
+        add(Material.FERN, "Felce", ShopItem.Category.NATURA, 128000, 51200, 25600, 320000, false, 0, 64);
+        add(Material.LARGE_FERN, "Felce Grande", ShopItem.Category.NATURA, 192000, 76800, 38400, 480000, false, 0, 64);
+        add(Material.GOAT_HORN, "Corno di Capra", ShopItem.Category.NATURA, 3200000, 1280000, 640000, 8000000, false, 0, 1);
+        add(Material.BRUSH, "Pennello", ShopItem.Category.DECORAZIONI, 1280000, 512000, 256000, 3200000, false, 0, 1);
+
+        // BLOCCHI QUARTZ EXTRA
+        add(Material.QUARTZ_BRICKS, "Mattoni Quarzo", ShopItem.Category.MINERALI, 10880000, 4352000, 2176000, 27200000, false, 0, 64);
 
         // RARI
         add(Material.TOTEM_OF_UNDYING, "Totem", ShopItem.Category.RARI, 500000000, 200000000, 100000000, 1000000000, true, 7, 1);
