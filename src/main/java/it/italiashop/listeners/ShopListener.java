@@ -208,7 +208,7 @@ public class ShopListener implements Listener {
         ShopItem item = ShopGUI.selectedItem.get(uuid);
         if (item == null) return;
 
-        if (slot == 22) { player.closeInventory(); plugin.getShopGUI().openCategory(player, item.getCategory()); return; }
+        if (slot == 22) { player.closeInventory(); plugin.getShopGUI().openCategory(player, item.getCategory(), ShopGUI.categoryPage.getOrDefault(uuid, 0)); return; }
 
         boolean hasCooldown = item.isRare() && plugin.getShopManager().hasCooldown(uuid, item.getMaterial());
 

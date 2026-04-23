@@ -7,10 +7,9 @@ import java.util.Map;
 
 public class ItemValueRegistry {
 
-    // D = 1 diamante = 1,250,000$
-    // Elitra = 1,000,000,000$
-    // 64 diamanti = 80,000,000$
-    private static final double D = 1_250_000;
+    // D = prezzo ACQUISTO diamante. Vendita diamante = D*0.6 = 1,250,000
+    // D = 1,250,000 / 0.6 = 2,083,333
+    private static final double D = 2_083_333;
 
     private static final Map<Material, double[]> VALUES = new HashMap<>();
 

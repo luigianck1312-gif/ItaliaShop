@@ -14,8 +14,9 @@ public class ShopManager {
     private final List<ShopItem> items = new ArrayList<>();
     private final Map<UUID, Map<Material, Long>> cooldowns = new HashMap<>();
 
-    // Prezzi base proporzionali: elitra=1B, diamante x1=1.25M, 64 diamanti=80M
-    private static final double D = 1_250_000; // 1 diamante
+    // D = prezzo ACQUISTO diamante. Vendita = D*0.6 = 1,250,000
+    // Quindi D = 1,250,000 / 0.6 = 2,083,333
+    private static final double D = 2_083_333;
 
     public ShopManager(ItaliaShop plugin) {
         this.plugin = plugin;
@@ -519,14 +520,13 @@ public class ShopManager {
         // ============================================================
         // RARI
         // ============================================================
-        add(Material.TOTEM_OF_UNDYING, "Totem", ShopItem.Category.RARI, 500_000_000, true, 7, 1);
-        add(Material.ELYTRA, "Elitra", ShopItem.Category.RARI, 1_000_000_000, true, 7, 1);
-        add(Material.HEART_OF_THE_SEA, "Cuore del Mare", ShopItem.Category.RARI, 200_000_000, true, 3, 1);
-        add(Material.NETHER_STAR, "Stella Nether", ShopItem.Category.RARI, 300_000_000, true, 3, 1);
-        add(Material.TRIDENT, "Tridente", ShopItem.Category.RARI, 150_000_000, true, 3, 1);
+        add(Material.TOTEM_OF_UNDYING, "Totem", ShopItem.Category.RARI, D*400, true, 7, 1);
+        add(Material.ELYTRA, "Elitra", ShopItem.Category.RARI, D*800, true, 7, 1);
+        add(Material.HEART_OF_THE_SEA, "Cuore del Mare", ShopItem.Category.RARI, D*160, true, 3, 1);
+        add(Material.NETHER_STAR, "Stella Nether", ShopItem.Category.RARI, D*240, true, 3, 1);
+        add(Material.TRIDENT, "Tridente", ShopItem.Category.RARI, D*100, true, 3, 1);
         add(Material.END_CRYSTAL, "Cristallo End", ShopItem.Category.RARI, D*25, false, 0, 1);
         add(Material.RECOVERY_COMPASS, "Bussola Recupero", ShopItem.Category.RARI, D*15, false, 0, 1);
-        add(Material.DRAGON_EGG, "Uovo del Drago", ShopItem.Category.RARI, 2_000_000_000, true, 0, 1);
     }
 
     public List<ShopItem> getItemsByCategory(ShopItem.Category category) {
