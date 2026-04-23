@@ -71,49 +71,72 @@ public class ArenaManager {
     private void buildArena() {
         if (arenaWorld == null) return;
         int cx = 0, cz = 0, y = 4;
-        int size = 30; // Arena 60x60
+        int size = 25; // Arena 50x50
 
+        // Pavimento a scacchi con pietra e pietra levigata
         for (int x = -size; x <= size; x++) {
             for (int z = -size; z <= size; z++) {
-                // Pavimento alternato
-                Material floor = ((x + z) % 2 == 0) ? Material.STONE_BRICKS : Material.CHISELED_STONE_BRICKS;
+                Material floor = ((Math.abs(x) + Math.abs(z)) % 2 == 0) ? Material.STONE_BRICKS : Material.SMOOTH_STONE;
+                // Centro speciale
+                if (Math.abs(x) <= 2 && Math.abs(z) <= 2) floor = Material.CHISELED_STONE_BRICKS;
                 arenaWorld.getBlockAt(cx + x, y, cz + z).setType(floor);
 
                 // Muri perimetrali
                 if (Math.abs(x) == size || Math.abs(z) == size) {
-                    for (int h = 1; h <= 6; h++) {
-                        Material wall = (h % 3 == 0) ? Material.IRON_BARS : Material.STONE_BRICK_WALL;
+                    for (int h = 1; h <= 7; h++) {
+                        Material wall;
+                        if (h == 1 || h == 7) wall = Material.STONE_BRICKS;
+                        else if (h % 3 == 0) wall = Material.IRON_BARS;
+                        else wall = Material.STONE_BRICK_WALL;
                         arenaWorld.getBlockAt(cx + x, y + h, cz + z).setType(wall);
-                    }
-                    // Merli in cima
-                    if (Math.abs(x) % 3 == 0 || Math.abs(z) % 3 == 0) {
-                        arenaWorld.getBlockAt(cx + x, y + 7, cz + z).setType(Material.STONE_BRICKS);
                     }
                 }
             }
         }
 
-        // Angoli torri
-        for (int[] corner : new int[][]{{-size, -size}, {size, -size}, {-size, size}, {size, size}}) {
-            for (int h = 1; h <= 8; h++) {
-                arenaWorld.getBlockAt(cx + corner[0], y + h, cz + corner[1]).setType(Material.STONE_BRICKS);
+        // Torri agli angoli (più belle)
+        int[][] corners = {{-size, -size}, {size, -size}, {-size, size}, {size, size}};
+        for (int[] corner : corners) {
+            int tx = cx + corner[0], tz = cz + corner[1];
+            for (int h = 1; h <= 10; h++) {
+                arenaWorld.getBlockAt(tx, y + h, tz).setType(Material.STONE_BRICKS);
             }
-            arenaWorld.getBlockAt(cx + corner[0], y + 9, cz + corner[1]).setType(Material.SEA_LANTERN);
+            // Lanterna in cima
+            arenaWorld.getBlockAt(tx, y + 11, tz).setType(Material.SEA_LANTERN);
+            // Decorazione intorno alla torre
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (dx == 0 && dz == 0) continue;
+                    arenaWorld.getBlockAt(tx + dx, y + 10, tz + dz).setType(Material.STONE_BRICK_WALL);
+                }
+            }
         }
 
-        // Illuminazione interna
-        for (int x = -25; x <= 25; x += 10) {
-            for (int z = -25; z <= 25; z += 10) {
+        // Illuminazione interna con lanterne marine
+        for (int x = -20; x <= 20; x += 8) {
+            for (int z = -20; z <= 20; z += 8) {
                 arenaWorld.getBlockAt(cx + x, y + 1, cz + z).setType(Material.SEA_LANTERN);
             }
         }
 
-        // Centro arena
+        // Centro arena - stella con blocchi preziosi
         arenaWorld.getBlockAt(cx, y, cz).setType(Material.DIAMOND_BLOCK);
-        arenaWorld.getBlockAt(cx + 1, y, cz).setType(Material.GOLD_BLOCK);
-        arenaWorld.getBlockAt(cx - 1, y, cz).setType(Material.GOLD_BLOCK);
-        arenaWorld.getBlockAt(cx, y, cz + 1).setType(Material.GOLD_BLOCK);
-        arenaWorld.getBlockAt(cx, y, cz - 1).setType(Material.GOLD_BLOCK);
+        for (int[] d : new int[][]{{1,0},{-1,0},{0,1},{0,-1}}) {
+            arenaWorld.getBlockAt(cx+d[0], y, cz+d[1]).setType(Material.GOLD_BLOCK);
+        }
+        for (int[] d : new int[][]{{2,0},{-2,0},{0,2},{0,-2}}) {
+            arenaWorld.getBlockAt(cx+d[0], y, cz+d[1]).setType(Material.IRON_BLOCK);
+        }
+
+        // Linea di separazione al centro (decorativa)
+        for (int x = -size; x <= size; x++) {
+            if (Math.abs(x) > 2)
+                arenaWorld.getBlockAt(cx + x, y, cz).setType(Material.CHISELED_STONE_BRICKS);
+        }
+        for (int z = -size; z <= size; z++) {
+            if (Math.abs(z) > 2)
+                arenaWorld.getBlockAt(cx, y, cz + z).setType(Material.CHISELED_STONE_BRICKS);
+        }
     }
 
     public void sendChallenge(Player challenger, Player challenged, double bet) {

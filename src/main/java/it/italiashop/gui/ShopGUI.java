@@ -19,33 +19,28 @@ public class ShopGUI {
 
     public static final Map<UUID, String> openGUI = new HashMap<>();
     public static final Map<UUID, ShopItem> selectedItem = new HashMap<>();
-    public static final Map<UUID, String> shopMode = new HashMap<>(); // "buy" or "sell"
+    public static final Map<UUID, String> shopMode = new HashMap<>();
+    public static final Map<UUID, Integer> categoryPage = new HashMap<>();
 
     public ShopGUI(ItaliaShop plugin) {
         this.plugin = plugin;
     }
 
-    // Menu principale - scegli compra o vendi
     public void openMainMenu(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Shop - SteelThrone");
 
-        ItemStack buyBtn = createItemWithLore(Material.LIME_WOOL,
+        inv.setItem(11, createItemWithLore(Material.LIME_WOOL,
                 ChatColor.GREEN + "Compra",
-                Arrays.asList(ChatColor.GRAY + "Sfoglia gli oggetti disponibili all'acquisto"));
-        inv.setItem(11, buyBtn);
-
-        ItemStack sellBtn = createItemWithLore(Material.RED_WOOL,
+                Collections.singletonList(ChatColor.GRAY + "Sfoglia e acquista oggetti")));
+        inv.setItem(15, createItemWithLore(Material.RED_WOOL,
                 ChatColor.RED + "Vendi",
-                Arrays.asList(ChatColor.GRAY + "Vendi oggetti dal tuo inventario"));
-        inv.setItem(15, sellBtn);
-
+                Collections.singletonList(ChatColor.GRAY + "Vendi oggetti dal tuo inventario")));
         inv.setItem(22, createItem(Material.BARRIER, ChatColor.RED + "Chiudi"));
 
         openGUI.put(player.getUniqueId(), "main");
         player.openInventory(inv);
     }
 
-    // Menu categorie per comprare
     public void openCategoryMenu(Player player) {
         Inventory inv = Bukkit.createInventory(null, 45, ChatColor.GREEN + "Compra - Categoria");
 
@@ -54,10 +49,11 @@ public class ShopGUI {
         inv.setItem(12, createItemWithLore(Material.OAK_LOG, ChatColor.YELLOW + "Legno", Collections.singletonList(ChatColor.GRAY + "Tronchi, Assi, Porte...")));
         inv.setItem(13, createItemWithLore(Material.WHITE_WOOL, ChatColor.YELLOW + "Decorazioni", Collections.singletonList(ChatColor.GRAY + "Lana, Vetro, Candele...")));
         inv.setItem(14, createItemWithLore(Material.DIAMOND, ChatColor.AQUA + "Minerali", Collections.singletonList(ChatColor.GRAY + "Ferro, Oro, Diamante...")));
-        inv.setItem(19, createItemWithLore(Material.OAK_LEAVES, ChatColor.GREEN + "Natura & Piante", Collections.singletonList(ChatColor.GRAY + "Fiori, Mob Drop, Cibo...")));
+        inv.setItem(19, createItemWithLore(Material.OAK_LEAVES, ChatColor.GREEN + "Natura & Piante", Collections.singletonList(ChatColor.GRAY + "Fiori, Mob Drop...")));
         inv.setItem(20, createItemWithLore(Material.NETHERRACK, ChatColor.RED + "Nether", Collections.singletonList(ChatColor.GRAY + "Blaze, Ghast, Nether...")));
-        inv.setItem(21, createItemWithLore(Material.END_STONE, ChatColor.LIGHT_PURPLE + "End", Collections.singletonList(ChatColor.GRAY + "Ender, Chorus, Shulker...")));
-        inv.setItem(22, createItemWithLore(Material.TOTEM_OF_UNDYING, ChatColor.GOLD + "Rari", Collections.singletonList(ChatColor.GRAY + "Totem, Elitra...")));
+        inv.setItem(21, createItemWithLore(Material.END_STONE, ChatColor.LIGHT_PURPLE + "End & Sculk", Collections.singletonList(ChatColor.GRAY + "Ender, Chorus, Sculk...")));
+        inv.setItem(22, createItemWithLore(Material.REDSTONE, ChatColor.RED + "Redstone", Collections.singletonList(ChatColor.GRAY + "Pistoni, Binari, Meccanismi...")));
+        inv.setItem(23, createItemWithLore(Material.TOTEM_OF_UNDYING, ChatColor.GOLD + "Rari", Collections.singletonList(ChatColor.GRAY + "Totem, Elitra...")));
         inv.setItem(36, createItem(Material.ARROW, ChatColor.WHITE + "Torna"));
 
         openGUI.put(player.getUniqueId(), "categories");
@@ -65,23 +61,41 @@ public class ShopGUI {
         player.openInventory(inv);
     }
 
-    // Lista oggetti per categoria
-    public void openCategory(Player player, ShopItem.Category category) {
+    public void openCategory(Player player, ShopItem.Category category, int page) {
         List<ShopItem> items = plugin.getShopManager().getItemsByCategory(category);
-        Inventory inv = Bukkit.createInventory(null, 54, ChatColor.GREEN + "Compra - " + getCategoryName(category));
+        String catName = getCategoryName(category);
+        int totalPages = (int) Math.ceil(items.size() / 45.0);
+        if (totalPages == 0) totalPages = 1;
+        if (page < 0) page = 0;
+        if (page >= totalPages) page = totalPages - 1;
 
-        int slot = 0;
-        for (ShopItem item : items) {
-            if (slot >= 45) break;
-            inv.setItem(slot++, createBuyItemDisplay(player, item));
+        Inventory inv = Bukkit.createInventory(null, 54,
+                ChatColor.GREEN + "Compra - " + catName + " (" + (page+1) + "/" + totalPages + ")");
+
+        int start = page * 45;
+        int end = Math.min(start + 45, items.size());
+        for (int i = start; i < end; i++) {
+            inv.setItem(i - start, createBuyItemDisplay(player, items.get(i)));
         }
 
-        inv.setItem(49, createItem(Material.ARROW, ChatColor.WHITE + "Torna"));
+        // Navigazione
+        if (page > 0) {
+            inv.setItem(45, createItemWithLore(Material.ARROW,
+                    ChatColor.WHITE + "« Pagina precedente",
+                    Collections.singletonList(ChatColor.GRAY + "Pagina " + page)));
+        }
+        inv.setItem(49, createItem(Material.BARRIER, ChatColor.RED + "Torna alle categorie"));
+        if (page < totalPages - 1) {
+            inv.setItem(53, createItemWithLore(Material.ARROW,
+                    ChatColor.WHITE + "Pagina successiva »",
+                    Collections.singletonList(ChatColor.GRAY + "Pagina " + (page+2))));
+        }
+
+        categoryPage.put(player.getUniqueId(), page);
         openGUI.put(player.getUniqueId(), "category_" + category.name());
         player.openInventory(inv);
     }
 
-    // Menu acquisto singolo oggetto
     public void openBuyMenu(Player player, ShopItem item) {
         Inventory inv = Bukkit.createInventory(null, 27, ChatColor.GREEN + "Compra - " + item.getDisplayName());
 
@@ -104,17 +118,20 @@ public class ShopGUI {
                     )));
         } else {
             if (item.getMaxStack() == 1) {
-                inv.setItem(13, createItemWithLore(Material.LIME_WOOL,
+                inv.setItem(11, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x1",
-                        Collections.singletonList(ChatColor.GRAY + "Prezzo: " + ChatColor.GREEN + "$" + formatPrice(item.getCurrentPrice()))));
+                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice()))));
             } else {
-                inv.setItem(10, createItemWithLore(Material.LIME_WOOL,
+                inv.setItem(9, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x1",
                         Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() / 64))));
+                inv.setItem(11, createItemWithLore(Material.LIME_WOOL,
+                        ChatColor.GREEN + "Compra x16",
+                        Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() / 4))));
                 inv.setItem(13, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x32",
                         Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice() / 2))));
-                inv.setItem(16, createItemWithLore(Material.LIME_WOOL,
+                inv.setItem(15, createItemWithLore(Material.LIME_WOOL,
                         ChatColor.GREEN + "Compra x64",
                         Collections.singletonList(ChatColor.GRAY + "$" + formatPrice(item.getCurrentPrice()))));
             }
@@ -126,7 +143,6 @@ public class ShopGUI {
         player.openInventory(inv);
     }
 
-    // Menu vendita - mostra inventario player
     public void openSellInventory(Player player) {
         Inventory inv = Bukkit.createInventory(null, 54, ChatColor.RED + "Vendi - Seleziona oggetto");
 
@@ -145,6 +161,7 @@ public class ShopGUI {
             display.setAmount(1);
             ItemMeta meta = display.getItemMeta();
             if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(display.getType());
+            if (meta == null) continue;
 
             String itemName = meta.hasDisplayName() ? meta.getDisplayName() : formatMaterialName(stack.getType().name());
             meta.setDisplayName(ChatColor.YELLOW + itemName);
@@ -166,7 +183,6 @@ public class ShopGUI {
         player.openInventory(inv);
     }
 
-    // Menu vendita quantita
     public void openSellQuantityMenu(Player player, Material material) {
         double sellPrice = ItemValueRegistry.getSellPrice(material);
         int inInventory = countInInventory(player, material);
@@ -184,7 +200,7 @@ public class ShopGUI {
             ));
             display.setItemMeta(meta);
         }
-        inv.setItem(13, display);
+        inv.setItem(4, display);
 
         if (inInventory >= 1)
             inv.setItem(9, createItemWithLore(Material.RED_WOOL, ChatColor.RED + "Vendi x1",
@@ -202,7 +218,6 @@ public class ShopGUI {
                 Collections.singletonList(ChatColor.GREEN + "$" + formatPrice(sellPrice * inInventory))));
 
         inv.setItem(22, createItem(Material.ARROW, ChatColor.WHITE + "Torna"));
-
         openGUI.put(player.getUniqueId(), "sell_qty_" + material.name());
         player.openInventory(inv);
     }
@@ -258,7 +273,8 @@ public class ShopGUI {
             case MINERALI -> "Minerali";
             case NATURA -> "Natura & Piante";
             case NETHER -> "Nether";
-            case END -> "End";
+            case END -> "End & Sculk";
+            case REDSTONE -> "Redstone";
             case RARI -> "Rari";
         };
     }

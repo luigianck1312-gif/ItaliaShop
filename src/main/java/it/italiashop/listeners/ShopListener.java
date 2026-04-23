@@ -158,15 +158,24 @@ public class ShopListener implements Listener {
                     case 19 -> ShopItem.Category.NATURA;
                     case 20 -> ShopItem.Category.NETHER;
                     case 21 -> ShopItem.Category.END;
-                    case 22 -> ShopItem.Category.RARI;
+                    case 22 -> ShopItem.Category.REDSTONE;
+                    case 23 -> ShopItem.Category.RARI;
                     default -> null;
                 };
-                if (cat != null) { player.closeInventory(); plugin.getShopGUI().openCategory(player, cat); }
+                if (cat != null) { player.closeInventory(); plugin.getShopGUI().openCategory(player, cat, 0); }
                 else if (slot == 36) { player.closeInventory(); plugin.getShopGUI().openMainMenu(player); }
             }
             default -> {
                 if (gui.startsWith("category_")) {
                     if (slot == 49) { player.closeInventory(); plugin.getShopGUI().openCategoryMenu(player); return; }
+                    // Navigazione pagine
+                    String catName = gui.replace("category_", "");
+                    ShopItem.Category cat;
+                    try { cat = ShopItem.Category.valueOf(catName); } catch (Exception ex) { return; }
+                    int currentPage = ShopGUI.categoryPage.getOrDefault(uuid, 0);
+                    if (slot == 45) { player.closeInventory(); plugin.getShopGUI().openCategory(player, cat, currentPage - 1); return; }
+                    if (slot == 53) { player.closeInventory(); plugin.getShopGUI().openCategory(player, cat, currentPage + 1); return; }
+
                     String matName = getLoreHidden(clicked);
                     if (matName != null) {
                         try {
@@ -215,9 +224,10 @@ public class ShopListener implements Listener {
         }
 
         int amount = switch (slot) {
-            case 10 -> 1;
+            case 9 -> 1;
+            case 11 -> item.getMaxStack() == 1 ? 1 : 16;
             case 13 -> item.getMaxStack() == 1 ? 1 : 32;
-            case 16 -> item.getMaxStack() == 1 ? 1 : 64;
+            case 15 -> item.getMaxStack() == 1 ? 1 : 64;
             default -> 0;
         };
         if (amount == 0) return;

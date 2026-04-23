@@ -5,7 +5,7 @@ import org.bukkit.Material;
 public class ShopItem {
 
     public enum Category {
-        BLOCCHI, PIETRA, LEGNO, DECORAZIONI, MINERALI, NATURA, NETHER, END, RARI
+        BLOCCHI, PIETRA, LEGNO, DECORAZIONI, MINERALI, NATURA, NETHER, END, REDSTONE, RARI
     }
 
     private final Material material;
