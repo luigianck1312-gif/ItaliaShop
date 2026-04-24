@@ -38,7 +38,24 @@ public class ItaliaShop extends JavaPlugin {
         npcManager = new NPCManager(this);
 
         getCommand("npc").setExecutor(new NPCCommand(this));
-        getServer().getPluginManager().registerEvents(new ShopListener(this), this);
+        ShopListener shopListener = new ShopListener(this);
+        getServer().getPluginManager().registerEvents(shopListener, this);
+
+        // Aggiorna lore prezzi ogni 2 secondi per tutti i giocatori online
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+                if (it.italiashop.gui.ShopGUI.openGUI.containsKey(player.getUniqueId())) continue;
+                if (it.italiashop.gui.PvPGUI.openGUI.containsKey(player.getUniqueId())) continue;
+                for (int i = 0; i < player.getInventory().getSize(); i++) {
+                    org.bukkit.inventory.ItemStack item = player.getInventory().getItem(i);
+                    if (item == null || item.getType().isAir()) continue;
+                    double buy = it.italiashop.managers.ItemValueRegistry.getBuyPrice(item.getType());
+                    double sell = it.italiashop.managers.ItemValueRegistry.getSellPrice(item.getType());
+                    if (buy <= 0 && sell <= 0) continue;
+                    shopListener.updateItemLorePublic(player, item, i);
+                }
+            }
+        }, 40L, 40L);
 
         getLogger().info("ItaliaShop caricato con successo!");
     }

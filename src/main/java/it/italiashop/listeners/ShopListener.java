@@ -138,24 +138,28 @@ public class ShopListener implements Listener {
         }, 1L);
     }
 
+    public void updateItemLorePublic(org.bukkit.entity.Player player, ItemStack item, int slot) {
+        updateItemLore(player, item, slot);
+    }
+
     private void updateItemLore(Player player, ItemStack item, int slot) {
         Material mat = item.getType();
         double buyPrice = ItemValueRegistry.getBuyPrice(mat);
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
         if (sellPrice <= 0 && buyPrice <= 0) return;
 
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
-
         // Calcola prezzo vendita in base alla durabilità
         double actualSellPrice = sellPrice;
-        if (item.getType().getMaxDurability() > 0 && meta instanceof org.bukkit.inventory.meta.Damageable damageable) {
-            int maxDur = item.getType().getMaxDurability();
-            int damage = damageable.getDamage();
+        short maxDur = mat.getMaxDurability();
+        if (maxDur > 0) {
+            short damage = item.getDurability();
             int remaining = maxDur - damage;
-            double ratio = (double) remaining / maxDur;
+            double ratio = Math.max(0, (double) remaining / maxDur);
             actualSellPrice = sellPrice * ratio;
         }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
 
         List<String> oldLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         List<String> cleanLore = new ArrayList<>();
@@ -166,8 +170,9 @@ public class ShopListener implements Listener {
         }
 
         if (buyPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
-        if (actualSellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(actualSellPrice));
-        else if (sellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "Rotto - $0");
+        if (actualSellPrice > 1) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(actualSellPrice));
+        else if (sellPrice > 0 && maxDur > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "Rotto - $0");
+        else if (sellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
 
         meta.setLore(cleanLore);
         item.setItemMeta(meta);

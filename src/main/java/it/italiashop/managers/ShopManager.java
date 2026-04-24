@@ -598,11 +598,11 @@ public class ShopManager {
         // ============================================================
         // RARI
         // ============================================================
-        add(Material.TOTEM_OF_UNDYING, "Totem", ShopItem.Category.RARI, 500_000_000, true, 7, 1);
-        add(Material.ELYTRA, "Elitra", ShopItem.Category.RARI, 1_000_000_000, true, 7, 1);
-        add(Material.HEART_OF_THE_SEA, "Cuore del Mare", ShopItem.Category.RARI, 200_000_000, true, 3, 1);
-        add(Material.NETHER_STAR, "Stella Nether", ShopItem.Category.RARI, 300_000_000, true, 3, 1);
-        add(Material.TRIDENT, "Tridente", ShopItem.Category.RARI, 150_000_000, true, 3, 1);
+        add(Material.TOTEM_OF_UNDYING, "Totem", ShopItem.Category.RARI, 500_000_000, false, 0, 1);
+        add(Material.ELYTRA, "Elitra", ShopItem.Category.RARI, 1_000_000_000, false, 0, 1);
+        add(Material.HEART_OF_THE_SEA, "Cuore del Mare", ShopItem.Category.RARI, 200_000_000, false, 0, 1);
+        add(Material.NETHER_STAR, "Stella Nether", ShopItem.Category.RARI, 300_000_000, false, 0, 1);
+        add(Material.TRIDENT, "Tridente", ShopItem.Category.RARI, 150_000_000, false, 0, 1);
         add(Material.END_CRYSTAL, "Cristallo End", ShopItem.Category.RARI, 50_000_000, false, 0, 1);
         add(Material.RECOVERY_COMPASS, "Bussola Recupero", ShopItem.Category.RARI, 40_000_000, false, 0, 1);
     }
