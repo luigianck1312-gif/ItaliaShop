@@ -90,9 +90,35 @@ public class ShopListener implements Listener {
         }, 2L);
     }
 
-    // Aggiorna lore quando si apre l'inventario
+    // Aggiorna lore quando si clicca nell'inventario (prende oggetti dalla creativa)
     @EventHandler
-    public void onInventoryOpen(org.bukkit.event.inventory.InventoryOpenEvent e) {
+    public void onInventoryInteract(org.bukkit.event.inventory.InventoryClickEvent e) {
+        if (!(e.getWhoClicked() instanceof Player player)) return;
+        UUID uuid = player.getUniqueId();
+
+        // Solo se NON siamo in una GUI del plugin
+        if (ShopGUI.openGUI.containsKey(uuid)) return;
+        if (PvPGUI.openGUI.containsKey(uuid)) return;
+
+        // Aggiorna lore dell'oggetto cliccato dopo un tick
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            for (int i = 0; i < player.getInventory().getSize(); i++) {
+                ItemStack item = player.getInventory().getItem(i);
+                if (item == null || item.getType().isAir()) continue;
+                double buy = ItemValueRegistry.getBuyPrice(item.getType());
+                double sell = ItemValueRegistry.getSellPrice(item.getType());
+                if (buy <= 0 && sell <= 0) continue;
+                // Controlla se ha già il lore aggiornato
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null && meta.hasLore()) {
+                    boolean hasPrice = meta.getLore().stream()
+                        .anyMatch(l -> ChatColor.stripColor(l).startsWith("Vendita:"));
+                    if (hasPrice) continue; // già aggiornato
+                }
+                updateItemLore(player, item, i);
+            }
+        }, 2L);
+    }
         if (!(e.getPlayer() instanceof Player player)) return;
         if (ShopGUI.openGUI.containsKey(player.getUniqueId())) return;
         if (PvPGUI.openGUI.containsKey(player.getUniqueId())) return;
@@ -338,15 +364,42 @@ public class ShopListener implements Listener {
         if (amount == 0) return;
         if (inInventory < amount) { player.sendMessage(ChatColor.RED + "Non hai abbastanza oggetti!"); return; }
 
-        double income = sellPrice * amount;
-        player.getInventory().removeItem(new ItemStack(mat, amount));
-        plugin.getEconomy().depositPlayer(player, income);
+        // Calcola prezzo tenendo conto della durabilità degli oggetti venduti
+        double totalIncome = 0;
+        int toRemove = amount;
+        for (int i = 0; i < player.getInventory().getSize() && toRemove > 0; i++) {
+            ItemStack slot2 = player.getInventory().getItem(i);
+            if (slot2 == null || slot2.getType() != mat) continue;
+
+            int take = Math.min(toRemove, slot2.getAmount());
+            double itemSellPrice = sellPrice;
+
+            // Calcola prezzo per durabilità
+            if (mat.getMaxDurability() > 0 && slot2.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable dmg) {
+                int maxDur = mat.getMaxDurability();
+                int remaining = maxDur - dmg.getDamage();
+                double ratio = (double) remaining / maxDur;
+                itemSellPrice = sellPrice * ratio;
+            }
+
+            totalIncome += itemSellPrice * take;
+
+            if (take >= slot2.getAmount()) {
+                player.getInventory().setItem(i, null);
+            } else {
+                slot2.setAmount(slot2.getAmount() - take);
+            }
+            toRemove -= take;
+        }
+        player.updateInventory();
+
+        plugin.getEconomy().depositPlayer(player, totalIncome);
 
         // Aggiorna prezzo dinamico se è un oggetto dello shop
         ShopItem shopItem = plugin.getShopManager().getShopItem(mat);
         if (shopItem != null) { shopItem.onSell(amount); plugin.getShopManager().savePrices(); }
 
-        player.sendMessage(ChatColor.GREEN + "Venduto x" + amount + " " + ShopGUI.formatMaterialName(mat.name()) + " per $" + ShopGUI.formatPrice(income));
+        player.sendMessage(ChatColor.GREEN + "Venduto x" + amount + " " + ShopGUI.formatMaterialName(mat.name()) + " per $" + ShopGUI.formatPrice(totalIncome));
         player.closeInventory();
     }
 
