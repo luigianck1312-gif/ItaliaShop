@@ -115,22 +115,23 @@ public class ShopListener implements Listener {
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
         if (sellPrice <= 0 && buyPrice <= 0) return;
 
-        // Non modificare items con enchant o NBT speciali
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 
-        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-
-        // Rimuovi vecchi valori se presenti
-        lore.removeIf(line -> {
+        // Prendi solo le righe che NON sono prezzi (mantieni enchant ecc ma rimuovi vecchi prezzi)
+        List<String> oldLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        List<String> cleanLore = new ArrayList<>();
+        for (String line : oldLore) {
             String stripped = ChatColor.stripColor(line);
-            return stripped.startsWith("Acquisto:") || stripped.startsWith("Vendita:");
-        });
+            if (stripped.startsWith("Acquisto:") || stripped.startsWith("Vendita:")) continue;
+            cleanLore.add(line);
+        }
 
-        if (buyPrice > 0) lore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
-        if (sellPrice > 0) lore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
+        // Aggiungi prezzi in fondo
+        if (buyPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
+        if (sellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
 
-        meta.setLore(lore);
+        meta.setLore(cleanLore);
         item.setItemMeta(meta);
         player.getInventory().setItem(slot, item);
     }
