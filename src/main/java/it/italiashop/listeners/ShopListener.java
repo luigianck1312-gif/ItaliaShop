@@ -119,6 +119,9 @@ public class ShopListener implements Listener {
             }
         }, 2L);
     }
+
+    @EventHandler
+    public void onInventoryOpen(org.bukkit.event.inventory.InventoryOpenEvent e) {
         if (!(e.getPlayer() instanceof Player player)) return;
         if (ShopGUI.openGUI.containsKey(player.getUniqueId())) return;
         if (PvPGUI.openGUI.containsKey(player.getUniqueId())) return;
