@@ -147,15 +147,22 @@ public class ShopGUI {
         Inventory inv = Bukkit.createInventory(null, 54, ChatColor.RED + "Vendi - Seleziona oggetto");
 
         int slot = 0;
-        Set<Material> shown = new HashSet<>();
         for (ItemStack stack : player.getInventory().getContents()) {
             if (stack == null || stack.getType().isAir()) continue;
-            if (shown.contains(stack.getType())) continue;
             if (!ItemValueRegistry.hasValue(stack.getType())) continue;
             if (slot >= 45) break;
 
-            double sellPrice = ItemValueRegistry.getSellPrice(stack.getType());
-            if (sellPrice <= 0) continue;
+            double baseSellPrice = ItemValueRegistry.getSellPrice(stack.getType());
+            if (baseSellPrice <= 0) continue;
+
+            // Calcola prezzo in base alla durabilità
+            double actualSellPrice = baseSellPrice;
+            if (stack.getType().getMaxDurability() > 0 && stack.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable dmg) {
+                int maxDur = stack.getType().getMaxDurability();
+                int remaining = maxDur - dmg.getDamage();
+                double ratio = (double) remaining / maxDur;
+                actualSellPrice = baseSellPrice * ratio;
+            }
 
             ItemStack display = stack.clone();
             display.setAmount(1);
@@ -163,19 +170,24 @@ public class ShopGUI {
             if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(display.getType());
             if (meta == null) continue;
 
-            String itemName = meta.hasDisplayName() ? meta.getDisplayName() : formatMaterialName(stack.getType().name());
+            String itemName = meta.hasDisplayName() ? ChatColor.stripColor(meta.getDisplayName()) : formatMaterialName(stack.getType().name());
             meta.setDisplayName(ChatColor.YELLOW + itemName);
 
             List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Vendita x1: " + ChatColor.GREEN + "$" + formatPrice(sellPrice));
-            lore.add(ChatColor.GRAY + "Hai: " + ChatColor.WHITE + countInInventory(player, stack.getType()));
+            lore.add(ChatColor.GRAY + "Vendita: " + ChatColor.GREEN + "$" + formatPrice(actualSellPrice));
+            if (stack.getType().getMaxDurability() > 0) {
+                int maxDur = stack.getType().getMaxDurability();
+                int remaining = maxDur - (stack.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable d ? d.getDamage() : 0);
+                int percent = (int)((double) remaining / maxDur * 100);
+                ChatColor durColor = percent > 50 ? ChatColor.GREEN : percent > 20 ? ChatColor.YELLOW : ChatColor.RED;
+                lore.add(ChatColor.GRAY + "Durabilita: " + durColor + percent + "%");
+            }
             lore.add(ChatColor.YELLOW + "Clicca per vendere");
             lore.add(ChatColor.BLACK + stack.getType().name());
             meta.setLore(lore);
             display.setItemMeta(meta);
 
             inv.setItem(slot++, display);
-            shown.add(stack.getType());
         }
 
         inv.setItem(49, createItem(Material.ARROW, ChatColor.WHITE + "Torna"));
