@@ -427,6 +427,9 @@ public class ShopListener implements Listener {
             plugin.getArenaManager().restoreLoserOnRespawn(player);
         }
     }
+
+    @EventHandler
+    public void onClose(InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player player)) return;
         UUID uuid = player.getUniqueId();
         ShopGUI.openGUI.remove(uuid);
