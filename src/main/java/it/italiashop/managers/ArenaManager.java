@@ -78,9 +78,14 @@ public class ArenaManager {
             for (int z = -size; z <= size; z++) {
                 double dist = Math.sqrt(x*x + z*z);
                 if (dist <= size) {
-                    Material floor = (Math.abs(x) + Math.abs(z)) % 3 == 0 ? Material.COARSE_DIRT : Material.SAND;
-                    if (dist < 5) floor = Material.CHISELED_STONE_BRICKS; // centro
+                    // Pavimento solido senza buchi
+                    Material floor;
+                    if (dist < 5) floor = Material.CHISELED_STONE_BRICKS;
+                    else if ((Math.abs(x) + Math.abs(z)) % 4 == 0) floor = Material.COARSE_DIRT;
+                    else floor = Material.SAND;
                     arenaWorld.getBlockAt(cx+x, y, cz+z).setType(floor);
+                    // Assicurati che non ci siano buchi sotto
+                    arenaWorld.getBlockAt(cx+x, y-1, cz+z).setType(Material.STONE);
                 }
             }
         }
@@ -202,9 +207,19 @@ public class ArenaManager {
         double bet = challengeBets.get(challengerUUID);
         currentBet = bet;
 
-        // Preleva scommessa da entrambi
-        plugin.getEconomy().withdrawPlayer(challenger, bet);
-        plugin.getEconomy().withdrawPlayer(challenged, bet);
+        // Preleva scommessa solo se > 0 e hanno i soldi
+        if (bet > 0) {
+            if (!plugin.getEconomy().has(challenger, bet)) {
+                challenger.sendMessage(ChatColor.RED + "Non hai abbastanza soldi per la scommessa!");
+                return false;
+            }
+            if (!plugin.getEconomy().has(challenged, bet)) {
+                challenged.sendMessage(ChatColor.RED + "Non hai abbastanza soldi per la scommessa!");
+                return false;
+            }
+            plugin.getEconomy().withdrawPlayer(challenger, bet);
+            plugin.getEconomy().withdrawPlayer(challenged, bet);
+        }
 
         // Salva posizioni e inventari
         previousLocations.put(challengerUUID, challenger.getLocation().clone());
@@ -260,32 +275,43 @@ public class ArenaManager {
 
         fightActive = false;
 
-        // Il vincitore prende tutta la scommessa (bet * 2)
-        if (winner != null) {
+        // Il vincitore prende tutta la scommessa
+        if (currentBet > 0 && winner != null) {
             plugin.getEconomy().depositPlayer(winner, currentBet * 2);
             winner.sendMessage(ChatColor.GOLD + "Hai vinto! Incassato: $" + formatMoney(currentBet * 2));
         }
 
-        loser.sendMessage(ChatColor.RED + "Hai perso l'arena! Hai perso $" + formatMoney(currentBet));
+        loser.sendMessage(ChatColor.RED + "Hai perso l'arena!");
 
         UUID f1 = fighter1;
         UUID f2 = fighter2;
         fighter1 = null;
         fighter2 = null;
+        double betWon = currentBet;
         currentBet = 0;
 
-        // Ripristina con delay
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            Player l = Bukkit.getPlayer(loserUUID);
-            Player w = winner != null ? Bukkit.getPlayer(winnerUUID) : null;
-            if (l != null) restorePlayer(l);
-            if (w != null) restorePlayer(w);
+        // Ripristina il vincitore subito
+        if (winner != null) restorePlayer(winner);
 
-            String winMsg = ChatColor.GOLD + "[Arena] " + ChatColor.YELLOW +
-                    (winner != null ? winner.getName() : "Sconosciuto") +
-                    ChatColor.WHITE + " ha vinto l'arena!";
-            Bukkit.broadcastMessage(winMsg);
-        }, 20L);
+        // Il perdente viene ripristinato al respawn (gestito dall'evento PlayerRespawnEvent)
+        // Salva la posizione precedente del perdente per il respawn
+        previousLocations.put(loserUUID, previousLocations.getOrDefault(loserUUID,
+            Bukkit.getWorld("world").getSpawnLocation()));
+
+        String winMsg = ChatColor.GOLD + "[Arena] " + ChatColor.YELLOW +
+                (winner != null ? winner.getName() : "Sconosciuto") +
+                ChatColor.WHITE + " ha vinto l'arena!";
+        Bukkit.broadcastMessage(winMsg);
+    }
+
+    public boolean isRestoringPlayer(UUID uuid) {
+        return previousLocations.containsKey(uuid) && savedInventories.containsKey(uuid);
+    }
+
+    public void restoreLoserOnRespawn(Player player) {
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            restorePlayer(player);
+        }, 5L);
     }
 
     private void restorePlayer(Player player) {

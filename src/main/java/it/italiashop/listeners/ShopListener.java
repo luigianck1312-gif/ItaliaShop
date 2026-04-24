@@ -118,7 +118,16 @@ public class ShopListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
 
-        // Prendi solo le righe che NON sono prezzi (mantieni enchant ecc ma rimuovi vecchi prezzi)
+        // Calcola prezzo vendita in base alla durabilità
+        double actualSellPrice = sellPrice;
+        if (item.getType().getMaxDurability() > 0 && meta instanceof org.bukkit.inventory.meta.Damageable damageable) {
+            int maxDur = item.getType().getMaxDurability();
+            int damage = damageable.getDamage();
+            int remaining = maxDur - damage;
+            double ratio = (double) remaining / maxDur;
+            actualSellPrice = sellPrice * ratio;
+        }
+
         List<String> oldLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         List<String> cleanLore = new ArrayList<>();
         for (String line : oldLore) {
@@ -127,9 +136,9 @@ public class ShopListener implements Listener {
             cleanLore.add(line);
         }
 
-        // Aggiungi prezzi in fondo
         if (buyPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
-        if (sellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
+        if (actualSellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(actualSellPrice));
+        else if (sellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "Rotto - $0");
 
         meta.setLore(cleanLore);
         item.setItemMeta(meta);
@@ -142,9 +151,11 @@ public class ShopListener implements Listener {
         Player victim = e.getEntity();
         if (!plugin.getArenaManager().isFighting(victim.getUniqueId())) return;
 
-        e.setCancelled(true);
+        // Cancella il drop degli oggetti dell'arena (spada e armatura diamante)
+        e.getDrops().clear();
+        e.setDroppedExp(0);
         e.setDeathMessage(null);
-        victim.setHealth(1);
+
         plugin.getArenaManager().onFighterDeath(victim);
     }
 
@@ -300,8 +311,22 @@ public class ShopListener implements Listener {
         try { mat = Material.valueOf(matName); } catch (Exception e) { return; }
 
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
-        int inInventory = countInInventory(player, mat);
 
+        // Calcola prezzo in base a durabilità se applicabile
+        if (mat.getMaxDurability() > 0) {
+            int firstSlot = player.getInventory().first(mat);
+            if (firstSlot >= 0) {
+                ItemStack sample = player.getInventory().getItem(firstSlot);
+                if (sample != null && sample.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable dmg) {
+                    int maxDur = mat.getMaxDurability();
+                    int remaining = maxDur - dmg.getDamage();
+                    double ratio = (double) remaining / maxDur;
+                    sellPrice = sellPrice * ratio;
+                }
+            }
+        }
+
+        int inInventory = countInInventory(player, mat);
         int amount = switch (slot) {
             case 9 -> 1;
             case 11 -> 16;
@@ -394,8 +419,14 @@ public class ShopListener implements Listener {
         return count;
     }
 
+    // Respawn dopo morte in arena
     @EventHandler
-    public void onClose(InventoryCloseEvent e) {
+    public void onRespawn(org.bukkit.event.player.PlayerRespawnEvent e) {
+        Player player = e.getPlayer();
+        if (plugin.getArenaManager().isRestoringPlayer(player.getUniqueId())) {
+            plugin.getArenaManager().restoreLoserOnRespawn(player);
+        }
+    }
         if (!(e.getPlayer() instanceof Player player)) return;
         UUID uuid = player.getUniqueId();
         ShopGUI.openGUI.remove(uuid);
