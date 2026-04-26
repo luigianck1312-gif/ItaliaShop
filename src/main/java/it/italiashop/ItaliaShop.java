@@ -1,12 +1,17 @@
 package it.italiashop;
 
+import it.italiashop.commands.CrystalCommand;
 import it.italiashop.commands.NPCCommand;
 import it.italiashop.gui.PvPGUI;
 import it.italiashop.gui.ShopGUI;
+import it.italiashop.gui.SpawnerGUI;
 import it.italiashop.listeners.ShopListener;
+import it.italiashop.listeners.SpawnerListener;
 import it.italiashop.managers.ArenaManager;
+import it.italiashop.managers.CrystalManager;
 import it.italiashop.managers.NPCManager;
 import it.italiashop.managers.ShopManager;
+import it.italiashop.managers.SpawnerManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,6 +23,9 @@ public class ItaliaShop extends JavaPlugin {
     private NPCManager npcManager;
     private ShopGUI shopGUI;
     private PvPGUI pvpGUI;
+    private SpawnerManager spawnerManager;
+    private SpawnerGUI spawnerGUI;
+    private CrystalManager crystalManager;
     private Economy economy;
 
     @Override
@@ -36,10 +44,16 @@ public class ItaliaShop extends JavaPlugin {
         shopGUI = new ShopGUI(this);
         pvpGUI = new PvPGUI(this);
         npcManager = new NPCManager(this);
+        crystalManager = new CrystalManager(this);
+        spawnerManager = new SpawnerManager(this);
+        spawnerGUI = new SpawnerGUI(this);
 
         getCommand("npc").setExecutor(new NPCCommand(this));
+        getCommand("cristalli").setExecutor(new CrystalCommand(this));
+
         ShopListener shopListener = new ShopListener(this);
         getServer().getPluginManager().registerEvents(shopListener, this);
+        getServer().getPluginManager().registerEvents(new SpawnerListener(this), this);
 
         // Aggiorna lore prezzi ogni 2 secondi per tutti i giocatori online
         getServer().getScheduler().runTaskTimer(this, () -> {
@@ -64,6 +78,8 @@ public class ItaliaShop extends JavaPlugin {
     public void onDisable() {
         if (shopManager != null) shopManager.savePrices();
         if (npcManager != null) npcManager.save();
+        if (crystalManager != null) crystalManager.saveData();
+        if (spawnerManager != null) spawnerManager.saveData();
         getLogger().info("ItaliaShop disattivato!");
     }
 
@@ -80,5 +96,8 @@ public class ItaliaShop extends JavaPlugin {
     public NPCManager getNpcManager() { return npcManager; }
     public ShopGUI getShopGUI() { return shopGUI; }
     public PvPGUI getPvpGUI() { return pvpGUI; }
+    public SpawnerManager getSpawnerManager() { return spawnerManager; }
+    public SpawnerGUI getSpawnerGUI() { return spawnerGUI; }
+    public CrystalManager getCrystalManager() { return crystalManager; }
     public Economy getEconomy() { return economy; }
 }

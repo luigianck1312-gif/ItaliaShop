@@ -37,7 +37,8 @@ public class ShopListener implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Villager villager)) return;
-        if (plugin.getNpcManager().isShopVillager(villager) || plugin.getNpcManager().isPvpVillager(villager)) {
+        if (plugin.getNpcManager().isShopVillager(villager) || plugin.getNpcManager().isPvpVillager(villager) ||
+            (plugin.getNpcManager().getSpawnerUUID() != null && villager.getUniqueId().equals(plugin.getNpcManager().getSpawnerUUID()))) {
             e.setCancelled(true);
         }
     }
@@ -54,6 +55,9 @@ public class ShopListener implements Listener {
             plugin.getShopGUI().openMainMenu(player);
         } else if (plugin.getNpcManager().isPvpVillager(villager)) {
             plugin.getPvpGUI().openMainMenu(player);
+        } else if (plugin.getNpcManager().getSpawnerUUID() != null &&
+                   villager.getUniqueId().equals(plugin.getNpcManager().getSpawnerUUID())) {
+            plugin.getSpawnerGUI().openShop(player);
         }
     }
 

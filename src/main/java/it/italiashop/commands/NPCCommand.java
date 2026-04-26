@@ -26,7 +26,7 @@ public class NPCCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            player.sendMessage(ChatColor.RED + "Uso: /npc <place|remove> <mercato|pvp>");
+            player.sendMessage(ChatColor.RED + "Uso: /npc <place|remove> <mercato|pvp|spawner>");
             return true;
         }
 
@@ -35,14 +35,16 @@ public class NPCCommand implements CommandExecutor {
                 switch (args[1].toLowerCase()) {
                     case "mercato" -> { plugin.getNpcManager().spawnShopVillager(player.getLocation()); player.sendMessage(ChatColor.GREEN + "NPC Shop piazzato!"); }
                     case "pvp" -> { plugin.getNpcManager().spawnPvpVillager(player.getLocation()); player.sendMessage(ChatColor.GREEN + "NPC Arena piazzato!"); }
-                    default -> player.sendMessage(ChatColor.RED + "Usa: mercato o pvp");
+                    case "spawner" -> { plugin.getNpcManager().spawnSpawnerVillager(player.getLocation()); player.sendMessage(ChatColor.GREEN + "NPC Spawner Shop piazzato!"); }
+                    default -> player.sendMessage(ChatColor.RED + "Usa: mercato, pvp o spawner");
                 }
             }
             case "remove" -> {
                 switch (args[1].toLowerCase()) {
                     case "mercato" -> { plugin.getNpcManager().removeShopVillager(); player.sendMessage(ChatColor.GREEN + "NPC Shop rimosso!"); }
                     case "pvp" -> { plugin.getNpcManager().removePvpVillager(); player.sendMessage(ChatColor.GREEN + "NPC Arena rimosso!"); }
-                    default -> player.sendMessage(ChatColor.RED + "Usa: mercato o pvp");
+                    case "spawner" -> { plugin.getNpcManager().removeSpawnerVillager(); player.sendMessage(ChatColor.GREEN + "NPC Spawner rimosso!"); }
+                    default -> player.sendMessage(ChatColor.RED + "Usa: mercato, pvp o spawner");
                 }
             }
             default -> player.sendMessage(ChatColor.RED + "Usa: place o remove");

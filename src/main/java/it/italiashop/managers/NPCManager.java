@@ -15,10 +15,13 @@ public class NPCManager {
     private final ItaliaShop plugin;
     private Villager shopVillager = null;
     private Villager pvpVillager = null;
+    private Villager spawnerVillager = null;
     private Location shopLocation = null;
     private Location pvpLocation = null;
+    private Location spawnerLocation = null;
     private UUID shopUUID = null;
     private UUID pvpUUID = null;
+    private UUID spawnerUUID = null;
 
     public NPCManager(ItaliaShop plugin) {
         this.plugin = plugin;
@@ -40,6 +43,31 @@ public class NPCManager {
         pvpUUID = pvpVillager.getUniqueId();
         save();
     }
+
+    public void spawnSpawnerVillager(Location loc) {
+        removeSpawnerVillager();
+        spawnerLocation = loc.clone();
+        spawnerVillager = spawnVillager(loc, ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "Spawner Shop", Villager.Profession.CLERIC);
+        spawnerUUID = spawnerVillager.getUniqueId();
+        save();
+    }
+
+    public void removeSpawnerVillager() {
+        if (spawnerVillager != null && !spawnerVillager.isDead()) spawnerVillager.remove();
+        if (spawnerUUID != null) {
+            for (World w : Bukkit.getWorlds()) {
+                for (Entity e : w.getEntities()) {
+                    if (e.getUniqueId().equals(spawnerUUID)) { e.remove(); break; }
+                }
+            }
+        }
+        spawnerVillager = null;
+        spawnerUUID = null;
+        spawnerLocation = null;
+        save();
+    }
+
+    public UUID getSpawnerUUID() { return spawnerUUID; }
 
     public void removeShopVillager() {
         if (shopVillager != null && !shopVillager.isDead()) shopVillager.remove();
