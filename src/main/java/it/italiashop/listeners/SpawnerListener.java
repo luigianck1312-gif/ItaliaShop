@@ -30,6 +30,31 @@ public class SpawnerListener implements Listener {
         this.plugin = plugin;
     }
 
+    // Piazza spawner dal inventario
+    @EventHandler
+    public void onSpawnerPlace(org.bukkit.event.block.BlockPlaceEvent e) {
+        ItemStack item = e.getItemInHand();
+        if (item.getType() != Material.SPAWNER) return;
+
+        SpawnerType type = plugin.getSpawnerManager().getSpawnerTypeFromItem(item);
+        if (type == null) return;
+
+        Player player = e.getPlayer();
+        Location loc = e.getBlock().getLocation();
+
+        // Imposta il mob dentro lo spawner
+        if (e.getBlock().getState() instanceof org.bukkit.block.CreatureSpawner cs) {
+            cs.setSpawnedType(type.entityType);
+            cs.setDelay(Integer.MAX_VALUE); // Non spawnare mob reali
+            cs.update();
+        }
+
+        // Registra nel plugin
+        plugin.getSpawnerManager().placeSpawner(player, loc, type, 1);
+        player.sendMessage(ChatColor.GREEN + "Spawner " + type.displayName +
+                ChatColor.GREEN + " piazzato! Produrrà loot ogni 30 minuti.");
+    }
+
     // Clicca spawner per aprire loot
     @EventHandler
     public void onSpawnerClick(PlayerInteractEvent e) {
