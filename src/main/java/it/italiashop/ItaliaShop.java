@@ -60,6 +60,7 @@ public class ItaliaShop extends JavaPlugin {
             for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
                 if (it.italiashop.gui.ShopGUI.openGUI.containsKey(player.getUniqueId())) continue;
                 if (it.italiashop.gui.PvPGUI.openGUI.containsKey(player.getUniqueId())) continue;
+                if (it.italiashop.gui.SpawnerGUI.openGUI.containsKey(player.getUniqueId())) continue;
                 for (int i = 0; i < player.getInventory().getSize(); i++) {
                     org.bukkit.inventory.ItemStack item = player.getInventory().getItem(i);
                     if (item == null || item.getType().isAir()) continue;

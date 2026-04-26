@@ -152,9 +152,12 @@ public class SpawnerListener implements Listener {
         if (!(e.getPlayer() instanceof Player player)) return;
         UUID uuid = player.getUniqueId();
         String gui = SpawnerGUI.openGUI.get(uuid);
-        if (gui == null || !gui.equals("spawner_loot")) return;
+        if (gui == null) return;
 
-        plugin.getSpawnerGUI().handleLootClose(player, e.getInventory());
+        if (gui.equals("spawner_loot")) {
+            plugin.getSpawnerGUI().handleLootClose(player, e.getInventory());
+        }
+        // Rimuovi sempre dalla mappa quando si chiude qualsiasi GUI spawner
         SpawnerGUI.openGUI.remove(uuid);
     }
 }

@@ -103,6 +103,7 @@ public class ShopListener implements Listener {
         // Solo se NON siamo in una GUI del plugin
         if (ShopGUI.openGUI.containsKey(uuid)) return;
         if (PvPGUI.openGUI.containsKey(uuid)) return;
+        if (it.italiashop.gui.SpawnerGUI.openGUI.containsKey(uuid)) return;
 
         // Aggiorna lore dell'oggetto cliccato dopo un tick
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
@@ -129,6 +130,7 @@ public class ShopListener implements Listener {
         if (!(e.getPlayer() instanceof Player player)) return;
         if (ShopGUI.openGUI.containsKey(player.getUniqueId())) return;
         if (PvPGUI.openGUI.containsKey(player.getUniqueId())) return;
+        if (it.italiashop.gui.SpawnerGUI.openGUI.containsKey(player.getUniqueId())) return;
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             for (int i = 0; i < player.getInventory().getSize(); i++) {
