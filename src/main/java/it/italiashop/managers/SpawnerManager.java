@@ -49,7 +49,7 @@ public class SpawnerManager {
             this.lootMaterial = lootMaterial;
             this.lootRange = lootRange;
             this.itemName = itemName;
-            this.dropChance = this == WITHER_SKELETON ? 0.30 : 1.0;
+            this.dropChance = name().equals("WITHER_SKELETON") ? 0.30 : 1.0;
         }
     }
 
