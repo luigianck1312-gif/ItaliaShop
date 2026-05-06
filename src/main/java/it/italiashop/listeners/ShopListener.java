@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -33,7 +34,6 @@ public class ShopListener implements Listener {
         this.plugin = plugin;
     }
 
-    // Proteggi i villager NPC da danni
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Villager villager)) return;
@@ -43,7 +43,6 @@ public class ShopListener implements Listener {
         }
     }
 
-    // Interazione con NPC
     @EventHandler
     public void onVillagerInteract(PlayerInteractEntityEvent e) {
         if (!(e.getRightClicked() instanceof Villager villager)) return;
@@ -61,7 +60,6 @@ public class ShopListener implements Listener {
         }
     }
 
-    // Valore oggetto nel lore quando si tiene in mano
     @EventHandler
     public void onItemSwitch(PlayerItemHeldEvent e) {
         Player player = e.getPlayer();
@@ -78,26 +76,64 @@ public class ShopListener implements Listener {
         }, 1L);
     }
 
-    // FIX: aggiorna lore solo per il tipo di oggetto raccolto, non tutto l'inventario
-    @EventHandler
+    /**
+     * FIX STACKING: aggiunge il lore all'item PRIMA che venga messo nell'inventario
+     * con priorità LOWEST = viene eseguito prima di tutti gli altri plugin.
+     * Così quando Minecraft fa lo stacking trova item con lore identico → li stacka correttamente.
+     */
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryPickup(org.bukkit.event.player.PlayerPickupItemEvent e) {
-        Player player = e.getPlayer();
-        Material mat = e.getItem().getItemStack().getType();
-        double buy = ItemValueRegistry.getBuyPrice(mat);
-        double sell = ItemValueRegistry.getSellPrice(mat);
-        if (buy <= 0 && sell <= 0) return;
+        if (!(e.getEntity() instanceof Player)) return;
+        ItemStack item = e.getItem().getItemStack();
+        Material mat = item.getType();
 
-        // Aspetta 5 tick così Minecraft fa prima lo stacking normale
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            for (int i = 0; i < player.getInventory().getSize(); i++) {
-                ItemStack item = player.getInventory().getItem(i);
-                if (item == null || item.getType() != mat) continue;
-                updateItemLore(player, item, i);
-            }
-        }, 5L);
+        double buyPrice = ItemValueRegistry.getBuyPrice(mat);
+        double sellPrice = ItemValueRegistry.getSellPrice(mat);
+        if (buyPrice <= 0 && sellPrice <= 0) return;
+
+        // Controlla se ha già il lore aggiornato
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null && meta.hasLore()) {
+            boolean hasPrice = meta.getLore().stream()
+                .anyMatch(l -> ChatColor.stripColor(l).startsWith("Vendita:") ||
+                               ChatColor.stripColor(l).startsWith("Acquisto:"));
+            if (hasPrice) return; // già aggiornato, non toccare
+        }
+
+        // Aggiunge il lore PRIMA che l'item entri nell'inventario
+        applyLoreToItem(item, mat, buyPrice, sellPrice);
     }
 
-    // Aggiorna lore quando si clicca nell'inventario
+    private void applyLoreToItem(ItemStack item, Material mat, double buyPrice, double sellPrice) {
+        double actualSellPrice = sellPrice;
+        short maxDur = mat.getMaxDurability();
+        if (maxDur > 0) {
+            short damage = item.getDurability();
+            int remaining = maxDur - damage;
+            double ratio = Math.max(0, (double) remaining / maxDur);
+            actualSellPrice = sellPrice * ratio;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+
+        List<String> oldLore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        List<String> cleanLore = new ArrayList<>();
+        for (String line : oldLore) {
+            String stripped = ChatColor.stripColor(line);
+            if (stripped.startsWith("Acquisto:") || stripped.startsWith("Vendita:")) continue;
+            cleanLore.add(line);
+        }
+
+        if (buyPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Acquisto: " + ChatColor.GREEN + "$" + ShopGUI.formatPrice(buyPrice));
+        if (actualSellPrice > 1) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(actualSellPrice));
+        else if (sellPrice > 0 && maxDur > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "Rotto - $0");
+        else if (sellPrice > 0) cleanLore.add(ChatColor.DARK_GRAY + "Vendita: " + ChatColor.RED + "$" + ShopGUI.formatPrice(sellPrice));
+
+        meta.setLore(cleanLore);
+        item.setItemMeta(meta);
+    }
+
     @EventHandler
     public void onInventoryInteract(org.bukkit.event.inventory.InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
@@ -107,7 +143,6 @@ public class ShopListener implements Listener {
         if (PvPGUI.openGUI.containsKey(uuid)) return;
         if (it.italiashop.gui.SpawnerGUI.openGUI.containsKey(uuid)) return;
 
-        // Aggiorna solo il tipo di oggetto cliccato, non tutto l'inventario
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
         Material mat = clicked.getType();
@@ -159,6 +194,15 @@ public class ShopListener implements Listener {
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
         if (sellPrice <= 0 && buyPrice <= 0) return;
 
+        // Salta se ha già il lore aggiornato — non rompere gli stack!
+        ItemMeta existingMeta = item.getItemMeta();
+        if (existingMeta != null && existingMeta.hasLore()) {
+            boolean hasPrice = existingMeta.getLore().stream()
+                .anyMatch(l -> ChatColor.stripColor(l).startsWith("Vendita:") ||
+                               ChatColor.stripColor(l).startsWith("Acquisto:"));
+            if (hasPrice) return;
+        }
+
         double actualSellPrice = sellPrice;
         short maxDur = mat.getMaxDurability();
         if (maxDur > 0) {
@@ -189,7 +233,6 @@ public class ShopListener implements Listener {
         player.getInventory().setItem(slot, item);
     }
 
-    // Morte in arena
     @EventHandler
     public void onDeath(PlayerDeathEvent e) {
         Player victim = e.getEntity();
@@ -200,7 +243,6 @@ public class ShopListener implements Listener {
         plugin.getArenaManager().onFighterDeath(victim);
     }
 
-    // Click GUI
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
