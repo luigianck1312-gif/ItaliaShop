@@ -78,47 +78,52 @@ public class ShopListener implements Listener {
         }, 1L);
     }
 
-    // Aggiorna lore quando si prende un oggetto dall'inventario
+    // FIX: aggiorna lore solo per il tipo di oggetto raccolto, non tutto l'inventario
     @EventHandler
     public void onInventoryPickup(org.bukkit.event.player.PlayerPickupItemEvent e) {
         Player player = e.getPlayer();
+        Material mat = e.getItem().getItemStack().getType();
+        double buy = ItemValueRegistry.getBuyPrice(mat);
+        double sell = ItemValueRegistry.getSellPrice(mat);
+        if (buy <= 0 && sell <= 0) return;
+
+        // Aspetta 5 tick così Minecraft fa prima lo stacking normale
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             for (int i = 0; i < player.getInventory().getSize(); i++) {
                 ItemStack item = player.getInventory().getItem(i);
-                if (item == null || item.getType().isAir()) continue;
-                double buy = ItemValueRegistry.getBuyPrice(item.getType());
-                double sell = ItemValueRegistry.getSellPrice(item.getType());
-                if (buy <= 0 && sell <= 0) continue;
+                if (item == null || item.getType() != mat) continue;
                 updateItemLore(player, item, i);
             }
-        }, 2L);
+        }, 5L);
     }
 
-    // Aggiorna lore quando si clicca nell'inventario (prende oggetti dalla creativa)
+    // Aggiorna lore quando si clicca nell'inventario
     @EventHandler
     public void onInventoryInteract(org.bukkit.event.inventory.InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
         UUID uuid = player.getUniqueId();
 
-        // Solo se NON siamo in una GUI del plugin
         if (ShopGUI.openGUI.containsKey(uuid)) return;
         if (PvPGUI.openGUI.containsKey(uuid)) return;
         if (it.italiashop.gui.SpawnerGUI.openGUI.containsKey(uuid)) return;
 
-        // Aggiorna lore dell'oggetto cliccato dopo un tick
+        // Aggiorna solo il tipo di oggetto cliccato, non tutto l'inventario
+        ItemStack clicked = e.getCurrentItem();
+        if (clicked == null || clicked.getType().isAir()) return;
+        Material mat = clicked.getType();
+        double buy = ItemValueRegistry.getBuyPrice(mat);
+        double sell = ItemValueRegistry.getSellPrice(mat);
+        if (buy <= 0 && sell <= 0) return;
+
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             for (int i = 0; i < player.getInventory().getSize(); i++) {
                 ItemStack item = player.getInventory().getItem(i);
-                if (item == null || item.getType().isAir()) continue;
-                double buy = ItemValueRegistry.getBuyPrice(item.getType());
-                double sell = ItemValueRegistry.getSellPrice(item.getType());
-                if (buy <= 0 && sell <= 0) continue;
-                // Controlla se ha già il lore aggiornato
+                if (item == null || item.getType() != mat) continue;
                 ItemMeta meta = item.getItemMeta();
                 if (meta != null && meta.hasLore()) {
                     boolean hasPrice = meta.getLore().stream()
                         .anyMatch(l -> ChatColor.stripColor(l).startsWith("Vendita:"));
-                    if (hasPrice) continue; // già aggiornato
+                    if (hasPrice) continue;
                 }
                 updateItemLore(player, item, i);
             }
@@ -154,7 +159,6 @@ public class ShopListener implements Listener {
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
         if (sellPrice <= 0 && buyPrice <= 0) return;
 
-        // Calcola prezzo vendita in base alla durabilità
         double actualSellPrice = sellPrice;
         short maxDur = mat.getMaxDurability();
         if (maxDur > 0) {
@@ -190,12 +194,9 @@ public class ShopListener implements Listener {
     public void onDeath(PlayerDeathEvent e) {
         Player victim = e.getEntity();
         if (!plugin.getArenaManager().isFighting(victim.getUniqueId())) return;
-
-        // Cancella il drop degli oggetti dell'arena (spada e armatura diamante)
         e.getDrops().clear();
         e.setDroppedExp(0);
         e.setDeathMessage(null);
-
         plugin.getArenaManager().onFighterDeath(victim);
     }
 
@@ -208,10 +209,8 @@ public class ShopListener implements Listener {
         String shopGui = ShopGUI.openGUI.get(uuid);
         String pvpGui = PvPGUI.openGUI.get(uuid);
 
-        // Cancella solo se siamo in una GUI del plugin
         if (shopGui == null && pvpGui == null) return;
 
-        // Controlla che sia l'inventario del plugin e non quello del player
         String title = e.getView().getTitle();
         if (!title.contains("Shop") && !title.contains("Compra") && !title.contains("Vendi") &&
             !title.contains("Arena") && !title.contains("Inviti") && !title.contains("Scommessa") &&
@@ -253,7 +252,6 @@ public class ShopListener implements Listener {
             default -> {
                 if (gui.startsWith("category_")) {
                     if (slot == 49) { player.closeInventory(); plugin.getShopGUI().openCategoryMenu(player); return; }
-                    // Navigazione pagine
                     String catName = gui.replace("category_", "");
                     ShopItem.Category cat;
                     try { cat = ShopItem.Category.valueOf(catName); } catch (Exception ex) { return; }
@@ -324,7 +322,6 @@ public class ShopListener implements Listener {
 
         plugin.getEconomy().withdrawPlayer(player, cost);
 
-        // Crea item con lore prezzi
         ItemStack newItem = new ItemStack(item.getMaterial(), amount);
         ItemMeta meta = newItem.getItemMeta();
         if (meta != null) {
@@ -352,7 +349,6 @@ public class ShopListener implements Listener {
 
         double sellPrice = ItemValueRegistry.getSellPrice(mat);
 
-        // Calcola prezzo in base a durabilità se applicabile
         if (mat.getMaxDurability() > 0) {
             int firstSlot = player.getInventory().first(mat);
             if (firstSlot >= 0) {
@@ -378,7 +374,6 @@ public class ShopListener implements Listener {
         if (amount == 0) return;
         if (inInventory < amount) { player.sendMessage(ChatColor.RED + "Non hai abbastanza oggetti!"); return; }
 
-        // Calcola prezzo tenendo conto della durabilità degli oggetti venduti
         double totalIncome = 0;
         int toRemove = amount;
         for (int i = 0; i < player.getInventory().getSize() && toRemove > 0; i++) {
@@ -388,7 +383,6 @@ public class ShopListener implements Listener {
             int take = Math.min(toRemove, slot2.getAmount());
             double itemSellPrice = sellPrice;
 
-            // Calcola prezzo per durabilità
             if (mat.getMaxDurability() > 0 && slot2.getItemMeta() instanceof org.bukkit.inventory.meta.Damageable dmg) {
                 int maxDur = mat.getMaxDurability();
                 int remaining = maxDur - dmg.getDamage();
@@ -409,7 +403,6 @@ public class ShopListener implements Listener {
 
         plugin.getEconomy().depositPlayer(player, totalIncome);
 
-        // Aggiorna prezzo dinamico se è un oggetto dello shop
         ShopItem shopItem = plugin.getShopManager().getShopItem(mat);
         if (shopItem != null) { shopItem.onSell(amount); plugin.getShopManager().savePrices(); }
 
@@ -486,7 +479,6 @@ public class ShopListener implements Listener {
         return count;
     }
 
-    // Respawn dopo morte in arena
     @EventHandler
     public void onRespawn(org.bukkit.event.player.PlayerRespawnEvent e) {
         Player player = e.getPlayer();
