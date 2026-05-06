@@ -9,10 +9,16 @@ import it.italiashop.listeners.ShopListener;
 import it.italiashop.listeners.SpawnerListener;
 import it.italiashop.managers.ArenaManager;
 import it.italiashop.managers.CrystalManager;
+import it.italiashop.managers.ItemValueRegistry;
 import it.italiashop.managers.NPCManager;
 import it.italiashop.managers.ShopManager;
 import it.italiashop.managers.SpawnerManager;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -55,18 +61,31 @@ public class ItaliaShop extends JavaPlugin {
         getServer().getPluginManager().registerEvents(shopListener, this);
         getServer().getPluginManager().registerEvents(new SpawnerListener(this), this);
 
-        // Aggiorna lore prezzi ogni 2 secondi per tutti i giocatori online
+        // Aggiorna lore prezzi ogni 2 secondi
+        // FIX: salta gli slot che hanno già il lore aggiornato per non rompere lo stacking
         getServer().getScheduler().runTaskTimer(this, () -> {
-            for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
-                if (it.italiashop.gui.ShopGUI.openGUI.containsKey(player.getUniqueId())) continue;
-                if (it.italiashop.gui.PvPGUI.openGUI.containsKey(player.getUniqueId())) continue;
-                if (it.italiashop.gui.SpawnerGUI.openGUI.containsKey(player.getUniqueId())) continue;
-                for (int i = 0; i < player.getInventory().getSize(); i++) {
-                    org.bukkit.inventory.ItemStack item = player.getInventory().getItem(i);
+            for (Player player : getServer().getOnlinePlayers()) {
+                if (ShopGUI.openGUI.containsKey(player.getUniqueId())) continue;
+                if (PvPGUI.openGUI.containsKey(player.getUniqueId())) continue;
+                if (SpawnerGUI.openGUI.containsKey(player.getUniqueId())) continue;
+
+                PlayerInventory inv = player.getInventory();
+                for (int i = 0; i < inv.getSize(); i++) {
+                    ItemStack item = inv.getItem(i);
                     if (item == null || item.getType().isAir()) continue;
-                    double buy = it.italiashop.managers.ItemValueRegistry.getBuyPrice(item.getType());
-                    double sell = it.italiashop.managers.ItemValueRegistry.getSellPrice(item.getType());
+                    double buy = ItemValueRegistry.getBuyPrice(item.getType());
+                    double sell = ItemValueRegistry.getSellPrice(item.getType());
                     if (buy <= 0 && sell <= 0) continue;
+
+                    // FIX: salta se ha già il lore con prezzi aggiornati
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta != null && meta.hasLore()) {
+                        boolean hasPrice = meta.getLore().stream()
+                            .anyMatch(l -> ChatColor.stripColor(l).startsWith("Vendita:") ||
+                                          ChatColor.stripColor(l).startsWith("Acquisto:"));
+                        if (hasPrice) continue;
+                    }
+
                     shopListener.updateItemLorePublic(player, item, i);
                 }
             }
