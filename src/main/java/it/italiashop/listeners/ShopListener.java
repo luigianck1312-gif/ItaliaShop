@@ -83,7 +83,7 @@ public class ShopListener implements Listener {
      */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryPickup(org.bukkit.event.player.PlayerPickupItemEvent e) {
-        if (!(e.getEntity() instanceof Player)) return;
+        Player player = e.getPlayer();
         ItemStack item = e.getItem().getItemStack();
         Material mat = item.getType();
 
